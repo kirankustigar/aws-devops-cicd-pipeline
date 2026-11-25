@@ -1,0 +1,76 @@
+---
+- name: Setup Jenkins Master via Docker
+  hosts: jenkins_master
+  become: yes
+  tasks:
+    - name: Remove broken jenkins apt list
+      file:
+        path: /etc/apt/sources.list.d/jenkins.list
+        state: absent
+
+    - name: Install Docker on Jenkins Master
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Ensure Docker is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Run Jenkins LTS Container
+      shell: |
+        docker rm -f jenkins-master || true
+        mkdir -p /var/jenkins_home && chown -R 1000:1000 /var/jenkins_home
+        docker run -d --name jenkins-master --restart unless-stopped -p 8080:8080 -p 50000:50000 -v /var/jenkins_home:/var/jenkins_home jenkins/jenkins:lts-jdk17
+
+- name: Setup Jenkins Slave (Maven + Docker)
+  hosts: jenkins_slave
+  become: yes
+  tasks:
+    - name: Install Java 17, Maven, Git, and Docker
+      apt:
+        name: [openjdk-17-jdk, maven, git, docker.io]
+        state: present
+        update_cache: yes
+
+    - name: Add ubuntu user to docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    - name: Ensure Docker is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+- name: Setup SonarQube and JFrog Artifactory
+  hosts: sonar_jfrog
+  become: yes
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Ensure Docker is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Run SonarQube Container (Port 9000)
+      shell: |
+        docker rm -f sonarqube || true
+        docker run -d --name sonarqube -p 9000:9000 sonarqube:lts-community
+
+    - name: Run JFrog Artifactory OSS Container (Port 8081/8082)
+      shell: |
+        docker rm -f artifactory || true
+        mkdir -p /jfrog/artifactory && chown -R 1030:1030 /jfrog/artifactory
+        docker run -d --name artifactory -p 8081:8081 -p 8082:8082 -v /jfrog/artifactory:/var/opt/jfrog/artifactory releases-docker.jfrog.io/jfrog/artifactory-oss:latest

@@ -1,0 +1,30 @@
+pipeline {
+    agent { label 'maven-docker' }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Maven Build & Test') {
+            steps {
+                sh 'mvn -f app/pom.xml clean package'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t aws-cicd-app:${BUILD_NUMBER} .'
+                sh 'docker images | grep aws-cicd-app'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'CI/CD Pipeline completed cleanly on Jenkins-Slave!'
+        }
+    }
+}
