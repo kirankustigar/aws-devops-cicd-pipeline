@@ -11,3 +11,7 @@ Production-style Infrastructure as Code (IaC), Configuration Management, and Con
 ### [02. Zero-Downtime Kubernetes Rolling-Update Pipeline](./projects/02-aws-k8s-zero-downtime-cicd)
 * **Stack:** AWS EC2, Modular Terraform (`variables.tf`, `main.tf`, `outputs.tf`), Ansible, Docker, Jenkins, Kubernetes (`k3s`)
 * **Highlights:** Automated `v1.0` -> `v2.0` live web release across 2 load-balanced Kubernetes Pods (`NodePort 30080`) with `maxUnavailable: 0` zero-downtime rolling updates.
+
+## Upcoming Roadmap (AIOps & Cloud-Native Extensions)
+* **03. GenAI CI/CD Root-Cause Analyzer:** Automated LLM log diagnostics in Jenkins `post { failure }` stages to accelerate Mean Time to Recovery (MTTR).
+* **04. Kubernetes Observability & Helm:** Parameterized Helm charts with Prometheus & Grafana monitoring dashboards.
