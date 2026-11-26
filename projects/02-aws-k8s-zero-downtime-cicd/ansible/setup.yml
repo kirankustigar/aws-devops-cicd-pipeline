@@ -1,0 +1,62 @@
+---
+- name: Configure AWS DevOps Node with Docker, Kubernetes (k3s), and Jenkins
+  hosts: devops_node
+  become: yes
+
+  tasks:
+    - name: Create 2GB swap file for memory stability
+      shell: |
+        if [ ! -f /swapfile ]; then
+          fallocate -l 2G /swapfile
+          chmod 600 /swapfile
+          mkswap /swapfile
+          swapon /swapfile
+        fi
+
+    - name: Install Docker and curl
+      apt:
+        update_cache: yes
+        name:
+          - docker.io
+          - curl
+        state: present
+
+    - name: Ensure Docker service is running
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add ubuntu user to docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    - name: Download Kubernetes (k3s) installer
+      get_url:
+        url: https://get.k3s.io
+        dest: /tmp/k3s-install.sh
+        mode: '0755'
+
+    - name: Install Kubernetes (k3s) with Docker runtime support
+      shell: INSTALL_K3S_EXEC="--docker --write-kubeconfig-mode 644" /tmp/k3s-install.sh
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: Run Jenkins controller container with Docker and Kubeconfig access
+      shell: |
+        docker rm -f jenkins || true
+        docker run -d --name jenkins --restart unless-stopped           -u root           -p 8080:8080 -p 50000:50000           -v jenkins_home:/var/jenkins_home           -v /var/run/docker.sock:/var/run/docker.sock           -v /usr/bin/docker:/usr/bin/docker           -v /usr/local/bin/k3s:/usr/local/bin/kubectl           -v /etc/rancher/k3s/k3s.yaml:/root/.kube/config           jenkins/jenkins:lts
+
+    - name: Wait 20 seconds for Jenkins to generate initial admin password
+      pause:
+        seconds: 20
+
+    - name: Read Jenkins Initial Admin Password
+      command: docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+      register: jenkins_pass
+
+    - name: Display Jenkins Password
+      debug:
+        msg: "Jenkins Initial Admin Password: {{ jenkins_pass.stdout }}"

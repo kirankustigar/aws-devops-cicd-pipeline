@@ -1,0 +1,29 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('1. Checkout Code from GitHub') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('2. Build Versioned Docker Image') {
+            steps {
+                dir('projects/02-aws-k8s-zero-downtime-cicd/app') {
+                    sh "docker build -t k8s-web-app:v${BUILD_NUMBER} ."
+                }
+            }
+        }
+
+        stage('3. Kubernetes Zero-Downtime Rolling Update') {
+            steps {
+                sh """
+                    kubectl set image deployment/k8s-web-app web-container=k8s-web-app:v${BUILD_NUMBER}
+                    kubectl rollout status deployment/k8s-web-app --timeout=60s
+                    kubectl get pods -o wide
+                """
+            }
+        }
+    }
+}
