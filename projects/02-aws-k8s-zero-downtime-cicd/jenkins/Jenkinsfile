@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_TAG = "v2.${env.BUILD_NUMBER}"
+    }
+
     stages {
         stage('1. Checkout Code from GitHub') {
             steps {
@@ -11,18 +15,18 @@ pipeline {
         stage('2. Build Versioned Docker Image') {
             steps {
                 dir('projects/02-aws-k8s-zero-downtime-cicd/app') {
-                    sh "docker build -t k8s-web-app:v${BUILD_NUMBER} ."
+                    sh 'docker build -t k8s-web-app:${IMAGE_TAG} .'
                 }
             }
         }
 
         stage('3. Kubernetes Zero-Downtime Rolling Update') {
             steps {
-                sh """
-                    kubectl set image deployment/k8s-web-app web-container=k8s-web-app:v${BUILD_NUMBER}
-                    kubectl rollout status deployment/k8s-web-app --timeout=60s
-                    kubectl get pods -o wide
-                """
+                sh '''
+                    kubectl --kubeconfig=/root/.kube/config set image deployment/k8s-web-app web-container=k8s-web-app:${IMAGE_TAG}
+                    kubectl --kubeconfig=/root/.kube/config rollout status deployment/k8s-web-app --timeout=60s
+                    kubectl --kubeconfig=/root/.kube/config get pods -o wide
+                '''
             }
         }
     }
