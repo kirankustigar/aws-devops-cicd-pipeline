@@ -1,17 +1,13 @@
-# End-to-End AWS DevOps CI/CD Pipeline
+# AWS DevOps & Cloud Automation Portfolio
 
-Automated cloud infrastructure provisioning, configuration management, static code analysis, and containerized CI/CD pipeline built on AWS (`ap-south-1`).
+Production-style Infrastructure as Code (IaC), Configuration Management, and Containerized CI/CD architectures implemented on **AWS (`ap-south-1`)**.
 
-## Architecture & Tech Stack
-* **Cloud Provider:** AWS (EC2 `t3.medium` / `t3.large`, Security Groups, EBS Storage, Key Pairs in Mumbai `ap-south-1`)
-* **Infrastructure as Code (IaC):** Terraform (`terraform/main.tf`)
-* **Configuration Management:** Ansible (`ansible/setup-tools.yml`, `ansible/inventory.ini`)
-* **CI/CD Orchestration:** Distributed Jenkins Master-Slave architecture (`jenkins/Jenkinsfile`)
-* **Build & Containerization:** Apache Maven (Java 17) & Docker (`Dockerfile`, `app/`)
-* **Code Quality & Artifact Storage:** SonarQube (Quality Gate & Static Analysis) + Sonatype Nexus Repository
+## Projects Included
 
-## Key DevOps Workflows Implemented
-1. **Infrastructure Provisioning:** Provisioned 3 Ubuntu EC2 instances and least-privilege security rules via Terraform.
-2. **Automated Tooling Setup:** Configured Jenkins Master, dedicated Maven/Docker Build Slave, SonarQube, and Nexus via Ansible.
-3. **Distributed CI/CD Pipeline:** Offloaded Maven builds and Docker image creation from Jenkins Master to an SSH-connected Linux build agent (`build-slave-1`).
-4. **Code Quality & Artifact Management:** Analyzed source code via SonarQube Quality Gates (`0 Bugs, 0 Vulnerabilities`) and published release `.jar` artifacts to Sonatype Nexus.
+### [01. Multi-Node Enterprise CI/CD Pipeline](./projects/01-aws-multi-node-cicd)
+* **Stack:** AWS EC2, Terraform, Ansible, Jenkins (Master-Slave SSH Agents), Maven, Docker, SonarQube, Sonatype Nexus
+* **Highlights:** Automated 3-server provisioning, distributed build isolation across SSH agents, static code quality gates (`0 Bugs, 0 Vulnerabilities`), and versioned `.jar` artifact publishing.
+
+### [02. Zero-Downtime Kubernetes Rolling-Update Pipeline](./projects/02-aws-k8s-zero-downtime-cicd)
+* **Stack:** AWS EC2, Modular Terraform (`variables.tf`, `main.tf`, `outputs.tf`), Ansible, Docker, Jenkins, Kubernetes (`k3s`)
+* **Highlights:** Automated `v1.0` -> `v2.0` live web release across 2 load-balanced Kubernetes Pods (`NodePort 30080`) with `maxUnavailable: 0` zero-downtime rolling updates.
